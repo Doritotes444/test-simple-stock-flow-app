@@ -1,64 +1,45 @@
 import React, { useState } from 'react';
-import { useAuth } from './application/hooks/useAuth';
-import { useProducts } from './application/hooks/useProducts';
+import { useAuth } from './application/AuthContext';
 import { Navbar } from './presentation/components/Navbar';
 import { LoginPage } from './presentation/pages/LoginPage';
 import { CatalogPage } from './presentation/pages/CatalogPage';
-import { PosPage } from './presentation/pages/PosPage';
-import { ReportsPage } from './presentation/pages/ReportsPage';
+import { CheckoutPage } from './presentation/pages/CheckoutPage';
+import { SalesHistoryPage } from './presentation/pages/SalesHistoryPage';
+import { SalesReportPage } from './presentation/pages/SalesReportPage';
+import { NewSellerPage } from './presentation/pages/NewSellerPage';
 
-export const App: React.FC = () => {
-    const { user, loading: authLoading, error: authError, login, logout, isAuthenticated } = useAuth();
-    const { products, loading: prodLoading, error: prodError, refresh: refreshProducts, createProduct } = useProducts();
-    const [currentTab, setCurrentTab] = useState<'catalog' | 'pos' | 'reports'>('catalog');
+export const AppContent: React.FC = () => {
+  const { user } = useAuth();
+  const [currentView, setCurrentView] = useState<string>('catalog');
 
-    if (authLoading) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-emerald-400 font-mono">
-                Cargando Simple Stock Flow...
-            </div>
-        );
-    }
+  if (!user) {
+    return <LoginPage />;
+  }
 
-    if (!isAuthenticated) {
-        return (
-            <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center">
-                <LoginPage onLogin={login} loading={authLoading} error={authError} />
-            </div>
-        );
-    }
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+      <Navbar currentView={currentView} onNavigate={setCurrentView} />
 
-    return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-            <Navbar
-                user={user}
-                currentTab={currentTab}
-                onSelectTab={(tab) => setCurrentTab(tab as any)}
-                onLogout={logout}
-            />
+      <main className="flex-1 pb-16">
+        {currentView === 'catalog' && <CatalogPage />}
+        {currentView === 'checkout' && <CheckoutPage onNavigate={setCurrentView} />}
+        {currentView === 'sales' && <SalesHistoryPage />}
+        {currentView === 'report' && <SalesReportPage />}
+        {currentView === 'new-seller' && <NewSellerPage onNavigate={setCurrentView} />}
+      </main>
 
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {currentTab === 'catalog' && (
-                    <CatalogPage
-                        products={products}
-                        loading={prodLoading}
-                        error={prodError}
-                        onCreateProduct={createProduct}
-                    />
-                )}
-
-                {currentTab === 'pos' && (
-                    <PosPage
-                        products={products}
-                        userId={user?.id || 1}
-                        onSaleSuccess={refreshProducts}
-                    />
-                )}
-
-                {currentTab === 'reports' && <ReportsPage />}
-            </main>
+      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>Simple Stock Flow · Sistema de Inventarios y Ventas</span>
+          <span className="font-medium text-slate-400">
+            Prueba Técnica SDD · SENA ADSO Ficha 3413974
+          </span>
         </div>
-    );
+      </footer>
+    </div>
+  );
 };
 
-export default App;
+export const App: React.FC = () => {
+  return <AppContent />;
+};
